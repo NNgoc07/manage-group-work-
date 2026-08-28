@@ -86,28 +86,29 @@ async function callClaude(topic, apiKey) {
 }
 
 async function callGemini(topic, apiKey, model) {
-  const geminiModel = model || process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + geminiModel + ':generateContent?key=' + apiKey;
+  // ⚡ Dùng gemini-2.0-flash (Model chuẩn, chạy cực nhanh, ổn định 100%)
+  const geminiModel = model || process.env.GEMINI_MODEL || 'gemini-2.0-flash';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
 
   const payload = {
     contents: [{ parts: [{ text: PROMPT + "\n\nĐề tài: " + topic }] }],
     generationConfig: { 
-      maxOutputTokens: 2048, // ⚡ Tăng từ 1024 lên 2048 để không bị ngắt giữa chừng
-      temperature: 0.7,
-      responseMimeType: "application/json" // ⚡ Ép trả về JSON chuẩn
+      maxOutputTokens: 2048, // ⚡ Tăng dung lượng output để không bị cắt đứt chuỗi JSON
+      temperature: 0.2,      // ⚡ Giảm temp để AI tập trung xuất JSON, không nói nhảm làm chậm
+      responseMimeType: "application/json" // ⚡ Ép trả về JSON thuần 100%
     },
   };
 
-  // Hàm hỗ trợ gọi API với cơ chế tự động Thử lại (Retry) khi gặp 503
+  // Hàm gọi API kèm cơ chế Thử lại (Retry) nếu Google quá tải
   const executeRequest = async (retries = 2) => {
     try {
       return await axios.post(url, payload, {
         headers: { 'content-type': 'application/json' },
-        timeout: 30000
+        timeout: 30000 // ⚡ Timeout 30 giây
       });
     } catch (err) {
-      if (err.response?.status === 503 && retries > 0) {
-        console.log('Gemini bị quá tải (503), đang thử lại sau 2 giây...');
+      if ((err.response?.status === 503 || err.response?.status === 429) && retries > 0) {
+        console.log('Gemini bận, đang tự thử lại sau 2s...');
         await new Promise(resolve => setTimeout(resolve, 2000));
         return executeRequest(retries - 1);
       }
@@ -132,7 +133,6 @@ async function callGemini(topic, apiKey, model) {
 
   throw new Error(`Gemini: parse JSON thất bại. Text nhận được: ${aiText}`);
 }
-
 const breakdown = async (req, res) => {
   try {
     const { topic, provider: rawProvider, model } = req.body;
