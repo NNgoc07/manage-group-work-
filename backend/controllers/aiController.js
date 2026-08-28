@@ -86,16 +86,23 @@ async function callClaude(topic, apiKey) {
 }
 
 async function callGemini(topic, apiKey, model) {
+  // Ưu tiên dùng gemini-1.5-flash hoặc gemini-2.0-flash
   const geminiModel = model || process.env.GEMINI_MODEL || 'gemini-1.5-flash';
-  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + geminiModel + ':generateContent?key=' + apiKey;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
+
   const response = await axios.post(
     url,
     {
       contents: [{ parts: [{ text: PROMPT + "\n\nĐề tài: " + topic }] }],
-      generationConfig: { maxOutputTokens: 1024, temperature: 0.7 },
+      generationConfig: {
+        maxOutputTokens: 1024,
+        temperature: 0.7,
+        responseMimeType: "application/json" // ⚡ Bắt buộc Gemini trả về JSON chuẩn
+      },
     },
     { headers: { 'content-type': 'application/json' }, timeout: 15000 }
   );
+
   let aiText = '';
   try {
     const candidates = response.data?.candidates;
@@ -103,11 +110,12 @@ async function callGemini(topic, apiKey, model) {
       const parts = candidates[0]?.content?.parts;
       if (Array.isArray(parts)) aiText = parts.map((p) => p.text || '').join('\n');
     }
-    if (!aiText && typeof response.data?.text === 'string') aiText = response.data.text;
   } catch (_) { aiText = ''; }
+
   const parsed = extractJsonArray(aiText);
   if (parsed && Array.isArray(parsed) && parsed.length > 0) return normalizeTasks(parsed);
-  throw new Error('Gemini: parse JSON thất bại');
+  
+  throw new Error(`Gemini: parse JSON thất bại. Text nhận được: ${aiText}`);
 }
 
 const breakdown = async (req, res) => {
