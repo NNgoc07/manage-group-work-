@@ -1,11 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Users, Plus, LogOut, Loader2, X, Copy, Check, UserPlus, FolderKanban, Crown, Calendar, Hash, ArrowUpRight, Sparkles } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Users, Plus, LogOut, Loader2, X, Copy, Check, UserPlus, FolderKanban, Crown, Calendar, Hash, ArrowUpRight, Sparkles, Moon, Sun } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import api from "../api";
+import { useTheme } from "../context/ThemeContext";
 
 export default function GroupListPage() {
   const { user, logout } = useAuth();
+  const { toggleTheme, isDark } = useTheme();
   const navigate = useNavigate();
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -94,9 +96,9 @@ export default function GroupListPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Header */}
-      <header className="sticky top-0 z-20 bg-white/80 backdrop-blur border-b border-slate-200">
+      <header className="sticky top-0 z-20 bg-white/80 dark:bg-slate-800/80 backdrop-blur border-b border-slate-200 dark:border-slate-700">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 h-[64px] flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white shadow-md shadow-indigo-200">
@@ -108,13 +110,19 @@ export default function GroupListPage() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <div className="hidden sm:block text-right">
-              <p className="text-sm font-medium text-slate-900 leading-none">{user?.fullName}</p>
-              <p className="text-xs text-slate-500">{user?.email}</p>
-            </div>
-            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white text-sm font-semibold">
-              {user?.fullName?.charAt(0)?.toUpperCase() || "U"}
-            </div>
+            <Link to="/profile" className="flex items-center gap-3 hover:opacity-80 transition">
+              <div className="hidden sm:block text-right">
+                <p className="text-sm font-medium text-slate-900 leading-none">{user?.fullName}</p>
+                <p className="text-xs text-slate-500">{user?.email}</p>
+              </div>
+              {user?.avatar ? (
+                <img src={user.avatar} alt={user.fullName} className="w-9 h-9 rounded-full object-cover border border-slate-200" onError={(e) => { e.currentTarget.style.display = "none"; }} />
+              ) : null}
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white text-sm font-semibold" style={{ display: user?.avatar ? "none" : undefined }}>
+                {user?.fullName?.charAt(0)?.toUpperCase() || "U"}
+              </div>
+            </Link>
+            <Link to="/profile" className="hidden sm:inline-flex text-sm font-medium text-slate-600 hover:text-indigo-600 border border-slate-200 hover:border-indigo-200 bg-white px-3 py-2 rounded-xl transition">Hồ sơ</Link>
             <button
               onClick={logout}
               className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300 bg-white px-3 py-2 rounded-xl transition"
@@ -175,7 +183,7 @@ export default function GroupListPage() {
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {groups.map((g) => (
-              <div key={g.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:shadow-md hover:border-slate-300 transition flex flex-col">
+              <div key={g.id} className="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-5 shadow-sm hover:shadow-md hover:border-slate-300 transition flex flex-col">
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center">
                     <FolderKanban size={20} />

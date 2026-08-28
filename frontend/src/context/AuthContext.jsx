@@ -68,6 +68,16 @@ export function AuthProvider({ children }) {
     setUser(null);
   }, []);
 
+  const updateUser = useCallback((nextUser) => {
+    setUser((prev) => {
+      const merged = typeof nextUser === "function" ? nextUser(prev) : { ...(prev || {}), ...nextUser };
+      try {
+        localStorage.setItem("user", JSON.stringify(merged));
+      } catch {}
+      return merged;
+    });
+  }, []);
+
   const value = {
     user,
     token,
@@ -76,6 +86,7 @@ export function AuthProvider({ children }) {
     login,
     register,
     logout,
+    updateUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

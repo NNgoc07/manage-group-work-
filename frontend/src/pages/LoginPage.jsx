@@ -30,17 +30,17 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-100 flex items-center justify-center px-4 py-10">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-slate-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 mb-4">
             <Sparkles size={28} />
           </div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Chào mừng trở lại</h1>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white tracking-tight">Chào mừng trở lại</h1>
           <p className="text-slate-500 mt-2 text-sm">Đăng nhập để quản lý nhóm và công việc</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-100 p-8">
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-slate-200/60 border border-slate-100 p-8">
           <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
               <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-xl px-4 py-3 flex items-center gap-2">

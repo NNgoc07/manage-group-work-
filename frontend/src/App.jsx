@@ -5,6 +5,7 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import GroupListPage from "./pages/GroupListPage";
 import GroupDetailPage from "./pages/GroupDetailPage";
+import ProfilePage from "./pages/ProfilePage";
 
 function RootRedirect() {
   const { isAuthenticated, loading } = useAuth();
@@ -36,6 +37,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <GroupDetailPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile"
+        element={
+          <ProtectedRoute>
+            <ProfilePage />
           </ProtectedRoute>
         }
       />

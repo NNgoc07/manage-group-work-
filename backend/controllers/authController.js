@@ -96,4 +96,74 @@ const getMe = async (req, res) => {
   }
 };
 
-module.exports = { register, login, getMe };
+// PUT /api/auth/me
+const updateMe = async (req, res) => {
+  try {
+    const { fullName, avatar } = req.body;
+
+    const existing = await prisma.user.findUnique({ where: { id: req.userId } });
+    if (!existing) return res.status(404).json({ message: 'Người dùng không tồn tại' });
+
+    const data = {};
+    if (fullName !== undefined) {
+      if (typeof fullName !== 'string' || !fullName.trim()) {
+        return res.status(400).json({ message: 'fullName không được để trống' });
+      }
+      data.fullName = fullName.trim();
+    }
+    if (avatar !== undefined) {
+      if (avatar !== null && typeof avatar !== 'string') {
+        return res.status(400).json({ message: 'avatar phải là URL dạng chuỗi' });
+      }
+      const trimmed = avatar === null ? null : String(avatar).trim();
+      // cho phép chuỗi rỗng => xóa avatar
+      data.avatar = trimmed ? trimmed : null;
+    }
+
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({ message: 'Không có dữ liệu để cập nhật' });
+    }
+
+    const updated = await prisma.user.update({
+      where: { id: req.userId },
+      data,
+      select: { id: true, email: true, fullName: true, avatar: true },
+    });
+
+    return res.json({ message: 'Cập nhật thông tin thành công', user: updated });
+  } catch (error) {
+    console.error('UpdateMe error:', error);
+    return res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
+};
+
+// PUT /api/auth/change-password
+const changePassword = async (req, res) => {
+  try {
+    const { oldPassword, newPassword } = req.body;
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({ message: 'oldPassword và newPassword là bắt buộc' });
+    }
+    if (typeof newPassword !== 'string' || newPassword.length < 6) {
+      return res.status(400).json({ message: 'Mật khẩu mới phải có ít nhất 6 ký tự' });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.userId } });
+    if (!user) return res.status(404).json({ message: 'Người dùng không tồn tại' });
+
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Mật khẩu cũ không đúng' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({ where: { id: req.userId }, data: { password: hashed } });
+
+    return res.json({ message: 'Đổi mật khẩu thành công' });
+  } catch (error) {
+    console.error('ChangePassword error:', error);
+    return res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
+};
+
+module.exports = { register, login, getMe, updateMe, changePassword };
