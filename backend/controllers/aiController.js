@@ -86,22 +86,36 @@ async function callClaude(topic, apiKey) {
 }
 
 async function callGemini(topic, apiKey, model) {
-  // Ưu tiên dùng gemini-1.5-flash hoặc gemini-2.0-flash
-  const geminiModel = model || process.env.GEMINI_MODEL || 'gemini-3.6-flash';
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
+  const geminiModel = model || process.env.GEMINI_MODEL || 'gemini-1.5-flash-latest';
+  const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + geminiModel + ':generateContent?key=' + apiKey;
 
-  const response = await axios.post(
-    url,
-    {
-      contents: [{ parts: [{ text: PROMPT + "\n\nĐề tài: " + topic }] }],
-      generationConfig: {
-        maxOutputTokens: 1024,
-        temperature: 0.7,
-        responseMimeType: "application/json" // ⚡ Bắt buộc Gemini trả về JSON chuẩn
-      },
+  const payload = {
+    contents: [{ parts: [{ text: PROMPT + "\n\nĐề tài: " + topic }] }],
+    generationConfig: { 
+      maxOutputTokens: 2048, // ⚡ Tăng từ 1024 lên 2048 để không bị ngắt giữa chừng
+      temperature: 0.7,
+      responseMimeType: "application/json" // ⚡ Ép trả về JSON chuẩn
     },
-    { headers: { 'content-type': 'application/json' }, timeout: 30000 }
-  );
+  };
+
+  // Hàm hỗ trợ gọi API với cơ chế tự động Thử lại (Retry) khi gặp 503
+  const executeRequest = async (retries = 2) => {
+    try {
+      return await axios.post(url, payload, {
+        headers: { 'content-type': 'application/json' },
+        timeout: 30000
+      });
+    } catch (err) {
+      if (err.response?.status === 503 && retries > 0) {
+        console.log('Gemini bị quá tải (503), đang thử lại sau 2 giây...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return executeRequest(retries - 1);
+      }
+      throw err;
+    }
+  };
+
+  const response = await executeRequest();
 
   let aiText = '';
   try {
@@ -110,11 +124,12 @@ async function callGemini(topic, apiKey, model) {
       const parts = candidates[0]?.content?.parts;
       if (Array.isArray(parts)) aiText = parts.map((p) => p.text || '').join('\n');
     }
+    if (!aiText && typeof response.data?.text === 'string') aiText = response.data.text;
   } catch (_) { aiText = ''; }
 
   const parsed = extractJsonArray(aiText);
   if (parsed && Array.isArray(parsed) && parsed.length > 0) return normalizeTasks(parsed);
-  
+
   throw new Error(`Gemini: parse JSON thất bại. Text nhận được: ${aiText}`);
 }
 
