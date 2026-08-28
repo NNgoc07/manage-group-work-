@@ -3,6 +3,7 @@ const authRoutes = require('./authRoutes');
 const groupRoutes = require('./groupRoutes');
 const taskRoutes = require('./taskRoutes');
 const commentRoutes = require('./commentRoutes');
+const aiRoutes = require('./aiRoutes');
 
 const router = express.Router();
 
@@ -10,5 +11,6 @@ router.use('/auth', authRoutes);
 router.use('/groups', groupRoutes);
 router.use('/tasks', taskRoutes);
 router.use('/comments', commentRoutes);
+router.use('/ai', aiRoutes);
 
 module.exports = router;
