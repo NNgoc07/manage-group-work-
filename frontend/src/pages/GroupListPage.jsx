@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Users, Plus, LogOut, Loader2, X, Copy, Check, UserPlus, FolderKanban, Crown, Calendar, Hash, ArrowUpRight, Sparkles } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import api from "../api";
 
 export default function GroupListPage() {
   const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -195,7 +197,7 @@ export default function GroupListPage() {
                     </button>
                   </div>
                 </div>
-                <button className="mt-4 w-full inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-black text-white text-sm font-medium py-2.5 rounded-xl transition">
+                <button onClick={() => navigate(`/groups/${g.id}`)} className="mt-4 w-full inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-black text-white text-sm font-medium py-2.5 rounded-xl transition">
                   Mở <ArrowUpRight size={16}/>
                 </button>
               </div>

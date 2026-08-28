@@ -151,4 +151,86 @@ const getMyGroups = async (req, res) => {
   }
 };
 
-module.exports = { createGroup, joinGroup, getMyGroups };
+// GET /api/groups/:groupId
+const getGroupById = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const group = await prisma.group.findUnique({
+      where: { id: groupId },
+      include: {
+        _count: { select: { members: true } },
+        createdBy: { select: { id: true, fullName: true } },
+      },
+    });
+    if (!group) return res.status(404).json({ message: 'Group không tồn tại' });
+
+    const isMember = await prisma.groupMember.findUnique({
+      where: { groupId_userId: { groupId, userId: req.userId } },
+    });
+    if (!isMember) return res.status(403).json({ message: 'Bạn không phải thành viên của group này' });
+
+    return res.json({
+      group: {
+        id: group.id,
+        name: group.name,
+        description: group.description,
+        inviteCode: group.inviteCode,
+        createdById: group.createdById,
+        createdAt: group.createdAt,
+        updatedAt: group.updatedAt,
+        memberCount: group._count.members,
+        adminName: group.createdBy.fullName,
+      },
+    });
+  } catch (error) {
+    console.error('GetGroupById error:', error);
+    return res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
+};
+
+// GET /api/groups/:groupId/members
+const getGroupMembers = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const group = await prisma.group.findUnique({ where: { id: groupId } });
+    if (!group) return res.status(404).json({ message: 'Group không tồn tại' });
+
+    const isMember = await prisma.groupMember.findUnique({
+      where: { groupId_userId: { groupId, userId: req.userId } },
+    });
+    if (!isMember) return res.status(403).json({ message: 'Bạn không phải thành viên của group này' });
+
+    const members = await prisma.groupMember.findMany({
+      where: { groupId },
+      include: { user: { select: { id: true, fullName: true, email: true, avatar: true } } },
+      orderBy: [{ role: 'desc' }, { joinedAt: 'asc' }],
+    });
+
+    const formatted = members.map((m) => ({
+      id: m.id,
+      userId: m.user.id,
+      fullName: m.user.fullName,
+      email: m.user.email,
+      avatar: m.user.avatar,
+      role: m.role,
+      joinedAt: m.joinedAt,
+    }));
+
+    return res.json({
+      group: {
+        id: group.id,
+        name: group.name,
+        description: group.description,
+        inviteCode: group.inviteCode,
+        createdById: group.createdById,
+        createdAt: group.createdAt,
+      },
+      members: formatted,
+    });
+  } catch (error) {
+    console.error('GetGroupMembers error:', error);
+    return res.status(500).json({ message: 'Lỗi server', error: error.message });
+  }
+};
+
+module.exports = { createGroup, joinGroup, getMyGroups, getGroupById, getGroupMembers };

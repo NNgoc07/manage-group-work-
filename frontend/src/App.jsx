@@ -4,6 +4,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import GroupListPage from "./pages/GroupListPage";
+import GroupDetailPage from "./pages/GroupDetailPage";
 
 function RootRedirect() {
   const { isAuthenticated, loading } = useAuth();
@@ -27,6 +28,14 @@ export default function App() {
         element={
           <ProtectedRoute>
             <GroupListPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/groups/:groupId"
+        element={
+          <ProtectedRoute>
+            <GroupDetailPage />
           </ProtectedRoute>
         }
       />
