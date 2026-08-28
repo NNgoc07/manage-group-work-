@@ -100,7 +100,7 @@ async function callGemini(topic, apiKey, model) {
         responseMimeType: "application/json" // ⚡ Bắt buộc Gemini trả về JSON chuẩn
       },
     },
-    { headers: { 'content-type': 'application/json' }, timeout: 15000 }
+    { headers: { 'content-type': 'application/json' }, timeout: 30000 }
   );
 
   let aiText = '';
