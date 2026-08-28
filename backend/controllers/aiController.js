@@ -87,7 +87,7 @@ async function callClaude(topic, apiKey) {
 
 async function callGemini(topic, apiKey, model) {
   // Ưu tiên dùng gemini-1.5-flash hoặc gemini-2.0-flash
-  const geminiModel = model || process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+  const geminiModel = model || process.env.GEMINI_MODEL || 'gemini-3.6-flash';
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${geminiModel}:generateContent?key=${apiKey}`;
 
   const response = await axios.post(
